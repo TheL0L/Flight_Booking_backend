@@ -1,0 +1,1 @@
+use `python flight_booking/manage.py runserver` to start the backend locally.
