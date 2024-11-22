@@ -1,37 +1,56 @@
 from django.core.management.base import BaseCommand
 from flights.models import Flight
 from datetime import datetime, timedelta
+import random
+
 
 class Command(BaseCommand):
-    help = "Populates the database with sample flight data"
+    help = "Populates the database with random flight data"
+    def generate_random_flight(self):
+        # Define a list of possible locations
+        locations = [
+            "New York", "London", "Tokyo", "Paris", "Dubai", 
+            "Los Angeles", "Singapore", "Toronto", "Mexico City", "Sydney"
+        ]
+
+        # Ensure departure and destination are different
+        departure, destination = random.sample(locations, 2)
+
+        # Generate random times
+        departure_time = datetime.now() + timedelta(
+            days=random.randint(1, 30),
+            hours=random.randint(0, 23),
+            minutes=random.randint(0, 59)
+        )
+        # Add 2 to 12 hours for the arrival time
+        arrival_time = departure_time + timedelta(hours=random.randint(2, 12))
+
+        # Generate a random flight number
+        flight_number = f"{random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ')}{random.randint(100, 999)}"
+
+        return {
+            "flight_number": flight_number,
+            "departure": departure,
+            "destination": destination,
+            "departure_time": departure_time,
+            "arrival_time": arrival_time,
+        }
 
     def handle(self, *args, **kwargs):
         Flight.objects.all().delete()  # Clear existing data
-        flights = [
-            {
-                "flight_number": "AB123",
-                "departure": "New York",
-                "destination": "London",
-                "departure_time": datetime.now() + timedelta(days=1),
-                "arrival_time": datetime.now() + timedelta(days=1, hours=6),
-            },
-            {
-                "flight_number": "CD456",
-                "departure": "Los Angeles",
-                "destination": "Tokyo",
-                "departure_time": datetime.now() + timedelta(days=2),
-                "arrival_time": datetime.now() + timedelta(days=2, hours=11),
-            },
-            {
-                "flight_number": "EF789",
-                "departure": "Paris",
-                "destination": "Dubai",
-                "departure_time": datetime.now() + timedelta(days=3),
-                "arrival_time": datetime.now() + timedelta(days=3, hours=7),
-            },
-        ]
+        # Clear existing flights
+        self.stdout.write("Clearing existing flight data...")
+        Flight.objects.all().delete()
 
-        for flight_data in flights:
+        # Number of flights to generate
+        num_flights = 100
+
+        # Create random flights
+        self.stdout.write(f"Generating {num_flights} random flights...")
+        for _ in range(num_flights):
+            flight_data = self.generate_random_flight()
             Flight.objects.create(**flight_data)
 
-        self.stdout.write(self.style.SUCCESS("Successfully populated flights!"))
+        self.stdout.write(self.style.SUCCESS(f"Successfully populated {num_flights} flights!"))
+
+
