@@ -16,4 +16,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /app/
 
 # Set entrypoint
-CMD ["sh", "-c", "cd flight_booking && python manage.py migrate && python manage.py runserver 0.0.0.0:8000 && python manage.py populate_flights"]
+CMD ["sh", "-c", "cd flight_booking && python manage.py migrate && python manage.py runserver 0.0.0.0:8000 && python manage.py populate_flights && python manage.py add_bookings"]
