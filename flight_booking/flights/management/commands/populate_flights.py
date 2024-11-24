@@ -6,6 +6,7 @@ import random
 
 class Command(BaseCommand):
     help = "Populates the database with random flight data"
+
     def generate_random_flight(self):
         # Define a list of possible locations
         locations = [
@@ -28,12 +29,16 @@ class Command(BaseCommand):
         # Generate a random flight number
         flight_number = f"{random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ')}{random.randint(100, 999)}"
 
+        # Generate random total seats (between 50 and 300)
+        total_seats = random.randint(50, 300)
+
         return {
             "flight_number": flight_number,
             "departure": departure,
             "destination": destination,
             "departure_time": departure_time,
             "arrival_time": arrival_time,
+            "total_seats": total_seats,
         }
 
     def handle(self, *args, **kwargs):
@@ -52,5 +57,3 @@ class Command(BaseCommand):
             Flight.objects.create(**flight_data)
 
         self.stdout.write(self.style.SUCCESS(f"Successfully populated {num_flights} flights!"))
-
-
