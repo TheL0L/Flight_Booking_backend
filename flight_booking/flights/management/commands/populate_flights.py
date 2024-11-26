@@ -26,8 +26,11 @@ class Command(BaseCommand):
         # Add 2 to 12 hours for the arrival time
         arrival_time = departure_time + timedelta(hours=random.randint(2, 12))
 
-        # Generate a random flight number
-        flight_number = f"{random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ')}{random.randint(100, 999)}"
+        # Generate a random flight number and ensure it's unique
+        while True:
+            flight_number = f"{random.choice('ABCDEFGHIJKLMNOPQRSTUVWXYZ')}{random.randint(100, 999)}"
+            if not Flight.objects.filter(flight_number=flight_number).exists():
+                break
 
         # Generate random total seats (between 50 and 300)
         total_seats = random.randint(50, 300)
@@ -43,7 +46,6 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         Flight.objects.all().delete()  # Clear existing data
-        # Clear existing flights
         self.stdout.write("Clearing existing flight data...")
         Flight.objects.all().delete()
 
