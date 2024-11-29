@@ -1,3 +1,4 @@
+from venv import logger
 from rest_framework import generics
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -94,5 +95,74 @@ def search_flights(request):
         ]
 
         return JsonResponse(flight_data, safe=False)
+
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+@csrf_exempt
+def book_flight(request):
+    """
+    Handle flight booking requests with POST data:
+    - flight_number: The flight to be booked
+    - passenger_first_name: First name of the passenger
+    - passenger_last_name: Last name of the passenger
+    - seats: Number of seats to book
+    """
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            logger.info(f"Received data: {data}")  # Log incoming data
+        except json.JSONDecodeError:
+            logger.error("Invalid JSON format")
+            return JsonResponse({"error": "Invalid JSON format"}, status=400)
+
+        flight_number = data.get('flight_number')
+        passenger_first_name = data.get('passenger_first_name')
+        passenger_last_name = data.get('passenger_last_name')
+        seats = int(data.get('seats'))
+
+        logger.info(f"Parsed fields: flight_number={flight_number}, seats={seats}")
+
+        if not (flight_number and passenger_first_name and passenger_last_name):
+            return JsonResponse(
+                {"error": "Missing required fields: flight_number, passenger_first_name, passenger_last_name"},
+                status=400,
+            )
+
+        # Validate seats
+        if not isinstance(seats, int):
+            return JsonResponse({"error": "Seats must be an integer."}, status=400)
+        
+
+        try:
+            flight = Flight.objects.get(flight_number=flight_number)
+        except Flight.DoesNotExist:
+            return JsonResponse({"error": "Flight not found"}, status=404)
+
+        if flight.available_seats() is None:
+            return JsonResponse({"error": "Invalid flight data: available seats is None"}, status=400)
+
+        if seats is None:
+            return JsonResponse({"error": "Invalid booking data: seats is None"}, status=400)
+
+        if flight.available_seats() < seats:
+            return JsonResponse({"error": "Not enough available seats"}, status=400)
+
+        # Reduce available seats
+        flight.booked_seats += seats
+        flight.save()
+
+        # Create the booking
+        booking = Booking.objects.create(
+            flight=flight,
+            passenger_first_name=passenger_first_name,
+            passenger_last_name=passenger_last_name,
+            seats=seats,
+        )
+
+        return JsonResponse({
+            "message": "Booking successful",
+            "booking_id": booking.booking_id,
+            "flight_number": flight.flight_number,
+        })
 
     return JsonResponse({"error": "Invalid request method"}, status=405)
