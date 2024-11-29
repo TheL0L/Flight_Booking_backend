@@ -1,3 +1,5 @@
+import random
+import string
 from django.db import models
 from django.core.exceptions import ValidationError
 
@@ -18,7 +20,7 @@ class Flight(models.Model):
         return f"{self.flight_number}: {self.departure} to {self.destination} ({self.available_seats()} seats left)"
 
 class Booking(models.Model):
-    booking_id = models.PositiveIntegerField(unique=True)
+    booking_id = models.CharField(max_length=20, unique=True)
     flight = models.ForeignKey(Flight, on_delete=models.CASCADE, related_name="bookings")
     passenger_first_name = models.CharField(max_length=50)
     passenger_last_name = models.CharField(max_length=50)
@@ -36,6 +38,12 @@ class Booking(models.Model):
             if self.flight.booked_seats > self.flight.total_seats:
                 raise ValidationError("This booking exceeds the available seats.")
             self.flight.save()
+
+            # Generate a unique confirmation number
+            random_chars = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            self.booking_id = f"{self.flight.flight_number}-{random_chars}"
+
+
         else:  # This is an update to an existing booking
             old_booking = Booking.objects.get(pk=self.pk)
             seat_diff = self.seats - old_booking.seats
