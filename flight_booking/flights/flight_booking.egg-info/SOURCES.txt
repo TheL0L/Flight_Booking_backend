@@ -1,0 +1,9 @@
+setup.py
+flight_booking.egg-info/PKG-INFO
+flight_booking.egg-info/SOURCES.txt
+flight_booking.egg-info/dependency_links.txt
+flight_booking.egg-info/top_level.txt
+migrations/0001_initial.py
+migrations/0002_flight_booked_seats_flight_total_seats_and_more.py
+migrations/0003_alter_booking_booking_id.py
+migrations/__init__.py
